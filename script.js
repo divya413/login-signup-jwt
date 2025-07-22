@@ -9,6 +9,23 @@ document.getElementById("show-login").addEventListener("click", function(){
   document.getElementById("login-form").style.display = "block";
 });
 
+// Check if user is already logged in (token exists)
+const token = localStorage.getItem('token');
+if(token){
+  fetch('http://localhost:3000/profile', {
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.querySelector(".container").innerHTML = `
+      <h2>${data.message}</h2>
+      <button id="logout-btn">Logout</button>
+    `;
+    logoutListener();
+  });
+}
+
 // Signup form submit
 document.getElementById("signup-form").addEventListener("submit", function(e){
   e.preventDefault();
@@ -53,11 +70,23 @@ document.getElementById("login-form").addEventListener("submit", function(e){
   })
   .then(res => res.json())
   .then(data => {
-    console.log("Login response:", data); // Debug line
     if(data.success){
-      document.querySelector(".container").innerHTML = `<h2>Hello, ${data.fullname}</h2>`;
+      localStorage.setItem('token', data.token);
+      document.querySelector(".container").innerHTML = `
+        <h2>Hello, ${data.fullname}</h2>
+        <button id="logout-btn">Logout</button>
+      `;
+      logoutListener();
     } else {
       alert(data.message);
     }
   });
 });
+
+// Logout function
+function logoutListener(){
+  document.getElementById("logout-btn").addEventListener("click", function(){
+    localStorage.removeItem('token');
+    location.reload();
+  });
+}
